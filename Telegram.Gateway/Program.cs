@@ -14,7 +14,9 @@ namespace Telegram.Gateway.MqttClient
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    webBuilder
+                    .UseStartup<Startup>()
+                    .UseUrls("http://localhost:5001");
                 });
     }
 }
