@@ -155,9 +155,9 @@ namespace Telegram.Gateway.MqttClient.Client
             }
         }
 
-        public Task StopMqttClientAsync()
+        public async Task StopMqttClientAsync()
         {
-            throw new NotImplementedException();
+            await mqttClient.DisconnectAsync();
         }
 
         #endregion
