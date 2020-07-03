@@ -3,11 +3,11 @@ using System;
 
 namespace Telegram.Gateway.MqttClient.Options
 {
-    public class MosquittoMqttClientOptionBuilder : MqttClientOptionsBuilder
+    public class AspCoreMqttClientOptionBuilder : MqttClientOptionsBuilder
     {
         public IServiceProvider ServiceProvider { get; }
 
-        public MosquittoMqttClientOptionBuilder(IServiceProvider serviceProvider)
+        public AspCoreMqttClientOptionBuilder(IServiceProvider serviceProvider)
         {
             ServiceProvider = serviceProvider;
         }        

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Telegram.Gateway.MqttClient.Extensions;
+using Telegram.Gateway.MqttClient.Services;
 using Telegram.Gateway.MqttClient.Settings;
 
 namespace Telegram.Gateway.MqttClient
@@ -58,8 +59,8 @@ namespace Telegram.Gateway.MqttClient
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
             services.AddMqttClientHostedService();
+            services.AddSingleton<ExternalService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -70,16 +71,12 @@ namespace Telegram.Gateway.MqttClient
                 app.UseDeveloperExceptionPage();
             }
 
-            //app.UseHttpsRedirection();
-
             app.UseRouting();
 
-            //app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            //app.UseEndpoints(endpoints =>
+            //{
+            //    endpoints.MapControllers();
+            //});
         }
     }
 }
