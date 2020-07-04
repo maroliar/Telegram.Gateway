@@ -1,9 +1,11 @@
-﻿using MQTTnet;
+﻿using Microsoft.Extensions.Logging;
+using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Protocol;
+using Serilog;
 using System;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -20,17 +22,20 @@ namespace Telegram.Gateway.MqttClient.Services
 {
     public class MqttClientService : IMqttClientService
     {
-        private IMqttClient mqttClient;
-        private IMqttClientOptions options;
-        private readonly TelegramBotClient bot;
+        private readonly IMqttClientOptions _options;
+        private readonly ILogger<MqttClientService> _logger;
+
+        private readonly IMqttClient mqttClient;
+        private TelegramBotClient bot;
 
         private readonly BrokerTopics brokerTopics = AppSettingsProvider.BrokerTopics;
         private readonly ClientSettings clientSettings = AppSettingsProvider.ClientSettings;
         private readonly TelegramSettings telegramSettings = AppSettingsProvider.TelegramSettings;
 
-        public MqttClientService(IMqttClientOptions options)
+        public MqttClientService(IMqttClientOptions options, ILogger<MqttClientService> logger)
         {
-            this.options = options;
+            _options = options;
+            _logger = logger;
             mqttClient = new MqttFactory().CreateMqttClient();
             ConfigureMqttClient();
 
@@ -93,7 +98,7 @@ namespace Telegram.Gateway.MqttClient.Services
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            await mqttClient.ConnectAsync(options);
+            await mqttClient.ConnectAsync(_options);
 
             // anuncia status online
             Payload payload = new Payload
@@ -105,6 +110,8 @@ namespace Telegram.Gateway.MqttClient.Services
 
             var serializedDeviceStatus = PrepareMsgToBroker(payload);
             await PublishMqttClientAsync(brokerTopics.TopicoGatewayTelegram, serializedDeviceStatus);
+
+            _logger.LogInformation(serializedDeviceStatus);
 
             if (!mqttClient.IsConnected)
             {
@@ -126,6 +133,8 @@ namespace Telegram.Gateway.MqttClient.Services
                 await mqttClient.DisconnectAsync(disconnectOption, cancellationToken);
             }
             await mqttClient.DisconnectAsync();
+
+            _logger.LogInformation("Encerrando...");
         }
 
 
@@ -138,8 +147,7 @@ namespace Telegram.Gateway.MqttClient.Services
 
                 if (topic.Contains(brokerTopics.TopicoGatewayTelegramSaida))
                 {
-                    Console.WriteLine("Nova mensagem recebida do broker: ");
-                    Console.WriteLine(jsonPayload);
+                    _logger.LogInformation(string.Format("Nova mensagem recebida do broker: {0}", jsonPayload));
 
                     var payload = JsonSerializer.Deserialize<Payload>(jsonPayload);
 
@@ -155,7 +163,7 @@ namespace Telegram.Gateway.MqttClient.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Erro ao tentar ler a mensagem: " + ex.Message);
+                _logger.LogError("Erro ao tentar ler a mensagem: " + ex.Message);
             }
         }
 
@@ -171,11 +179,8 @@ namespace Telegram.Gateway.MqttClient.Services
 
         public async Task PublishMqttClientAsync(string topic, string payload, bool retainFlag = false, int qos = 0)
         {
-            Console.WriteLine("Enviando mensagem para o broker: ");
-            Console.WriteLine(payload);
-
-            Console.Write("Topico: ");
-            Console.WriteLine(topic);
+            _logger.LogInformation(string.Format("Enviando mensagem para o broker: {0}", payload));
+            _logger.LogInformation(string.Format("Topico: {0}", topic));
 
             await mqttClient.PublishAsync(new MqttApplicationMessageBuilder()
                 .WithTopic(topic)
