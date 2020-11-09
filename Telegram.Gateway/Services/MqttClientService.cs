@@ -5,7 +5,6 @@ using MQTTnet.Client.Connecting;
 using MQTTnet.Client.Disconnecting;
 using MQTTnet.Client.Options;
 using MQTTnet.Protocol;
-using Serilog;
 using System;
 using System.Text;
 using System.Text.Encodings.Web;
